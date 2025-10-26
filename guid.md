@@ -11,7 +11,7 @@ python -m venv myenv
 啟動
 
 ```
-.\venv\Scripts\Activate
+.\myenv\Scripts\Activate
 ```
 
 關閉

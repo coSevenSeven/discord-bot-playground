@@ -15,10 +15,17 @@ class Article(TypedDict):
 
 base_url = "https://www.ptt.cc"
 
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "zh-TW,zh;q=0.9",
+    "Connection": "keep-alive",
+}
+
 
 def get_soup(url: str):
     try:
-        r = requests.get(url, timeout=5)  # 加上 timeout
+        r = requests.get(url, headers=headers, timeout=5)  # 加上 timeout
         r.raise_for_status()  # 如果狀態碼不是 200，會拋出 HTTPError
         soup = BeautifulSoup(r.text, "html.parser")
         return soup

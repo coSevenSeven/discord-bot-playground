@@ -14,6 +14,12 @@ class Article(TypedDict):
     queryAt: datetime
 
 
+class PttScraperError(Exception):
+    """用於所有 PTT 爬蟲相關錯誤的客製化異常 (例如連線失敗、HTTP錯誤、Cookie錯誤等)"""
+
+    pass
+
+
 base_url = "https://www.ptt.cc"
 
 headers = {
@@ -27,9 +33,19 @@ headers = {
 def get_soup(url: str):
     try:
         r = requests.get(url, headers=headers, timeout=5)  # 加上 timeout
-        r.raise_for_status()  # 如果狀態碼不是 200，會拋出 HTTPError
+        # 如果狀態碼不是 200，會拋出 HTTPError
+        r.raise_for_status()
+        # 即使使用了 Connection: close，也建議 close response
+        r.close()
         soup = BeautifulSoup(r.text, "html.parser")
         return soup
+
+    except requests.exceptions.RequestException as e:
+        # 捕捉所有 requests 相關的網路/連線/HTTP 錯誤
+        print(f"請求錯誤: {e}")
+        # 統一拋出客製化錯誤，讓上層知道這是爬蟲問題
+        raise PttScraperError(f"網路或HTTP請求失敗: {e}")
+
     except requests.exceptions.RequestException as e:
         print(f"請求錯誤: {e}")
         return None
@@ -90,7 +106,7 @@ def get_ptt_free_articles():
             try:
                 soup = get_soup(url)
                 break
-            except Exception as e:
+            except PttScraperError as e:
                 if retry_count < max_retries:
                     print(
                         f"🚨 連線失敗，第 {retry_count + 1} 次重試 (等待 10 秒)... 錯誤: {e}"

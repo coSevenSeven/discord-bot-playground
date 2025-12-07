@@ -1,4 +1,5 @@
 import datetime
+import time
 from datetime import date, timedelta, timezone
 from typing import List, TypedDict
 
@@ -83,7 +84,24 @@ def get_ptt_free_articles():
     while is_continue:
         print(f"爬取網址 {url}")
 
-        soup = get_soup(url)
+        soup = None
+        max_retries = 3
+        for retry_count in range(max_retries + 1):
+            try:
+                soup = get_soup(url)
+                break
+            except Exception as e:
+                if retry_count < max_retries:
+                    print(
+                        f"🚨 連線失敗，第 {retry_count + 1} 次重試 (等待 10 秒)... 錯誤: {e}"
+                    )
+                    time.sleep(10)
+                else:
+                    print(
+                        f"❌ 嘗試 {max_retries + 1} 次後仍無法取得網頁內容，終止爬蟲任務。"
+                    )
+                    raise e
+
         articles = soup.select(".r-list-container .r-ent")
 
         if len(articles) == 0:
